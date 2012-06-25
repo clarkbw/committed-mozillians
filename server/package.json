@@ -1,0 +1,16 @@
+{
+  "name": "committed-mozillians",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clarkbw/committed-mozillians.git"
+  },
+  "dependencies": {
+    "express": ">=2.5.9",
+    "ejs" : "0.7.1",
+    "redis": ">=0.7.2"
+  },
+  "engine": {
+    "node": "0.6.7"
+  }
+}
