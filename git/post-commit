@@ -30,7 +30,7 @@ begin
   end
   require 'rest_client'
   RestClient.post('http://localhost:8080/commit',
-                  :photo => file,
+                  :photo => File.new(file),
                   :name => name,
                   :email => email)
 rescue LoadError => e
