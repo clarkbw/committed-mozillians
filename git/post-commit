@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+
+path = File.join(ENV["HOME"] || Dir.home, ".mozcommits")
+if !File.exists?(path) || !File.directory?(path)
+  Dir.mkdir(path)
+  puts "Initializing directory #{path} for images"
+end
+
+file = File.join(path, "#{Time.now.to_i}.jpg")
+puts "Photo capture will go into #{file}"
+
+if system("imagesnap -h 2>&1 > /dev/null")
+  system "imagesnap -q -w 3 #{file}"
+else
+  puts "You need to install imagesnap.  e.g. brew install imagesnap"
+  exit 1
+end
+
+require 'open3'
+
+stdin, stdout, stderr = Open3.popen3("git config --get user.name")
+name = stdout.read
+
+stdin, stdout, stderr = Open3.popen3("git config --get user.email")
+email = stdout.read
+
+begin
+  if RUBY_VERSION == "1.8.7"
+    require 'rubygems'
+  end
+  require 'rest_client'
+  RestClient.post('http://localhost:8080/commit',
+                  :photo => file,
+                  :name => name,
+                  :email => email)
+rescue LoadError => e
+  puts e
+  puts "You need to install the ruby rest-client.  e.g. gem install rest-client"
+  exit 1
+end
+
+exit 0
