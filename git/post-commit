@@ -19,10 +19,16 @@ end
 require 'open3'
 
 stdin, stdout, stderr = Open3.popen3("git config --get user.name")
-name = stdout.read
+name = stdout.read.strip!
 
 stdin, stdout, stderr = Open3.popen3("git config --get user.email")
-email = stdout.read
+email = stdout.read.strip!
+
+stdin, stdout, stderr = Open3.popen3("git config --get remote.origin.url")
+project = stdout.read.strip!
+
+stdin, stdout, stderr = Open3.popen3("git log -1 HEAD")
+commit = stdout.read[/commit\ (.*)/, 1]
 
 begin
   if RUBY_VERSION == "1.8.7"
@@ -32,7 +38,9 @@ begin
   RestClient.post('http://localhost:8080/commit',
                   :photo => File.new(file),
                   :name => name,
-                  :email => email)
+                  :email => email,
+                  :project => project,
+                  :commit => commit)
 rescue LoadError => e
   puts e
   puts "You need to install the ruby rest-client.  e.g. gem install rest-client"
