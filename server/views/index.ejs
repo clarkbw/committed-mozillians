@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <style type="text/css">
+    * { margin:0; padding:0; }
+    html,body{background:#222;}
+    body{height:100%;}
+    img { border:none; }
+    #gallery { width: 480px; height: 480px; }
+  </style>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/galleria-1.2.7.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+
+      $(window).bind("resize", function() {
+        $("#gallery").width($(this).width()).height($(this).height());
+      }).trigger("resize");
+      
+      $.ajax({
+            url: "/images",
+            dataType:"json",
+            async: true
+        }).done(function(data) {
+          console.log("images data", data);
+          data = data.map(function(commit) {
+            return { image : "/gitshots/" + commit + ".jpg", title : "Commit: " + commit };
+          });
+          console.log("images data", data);
+          Galleria.loadTheme('js/galleria.classic.js');
+          Galleria.run('#gallery', { dataSource: data });
+        });
+
+    });
+  </script>
+</head>
+<body>
+  <div id="gallery"></div>
+</body>
+</html>
