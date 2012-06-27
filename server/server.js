@@ -20,15 +20,7 @@ app.get('/', function(req, res){
 
 app.get('/images', function(req, res){
   res.contentType('json');
-  // this is the type of return we want
-      //'id' : {
-      //    thumb: 'image.jpg',
-      //    image: 'image.jpg',
-      //    big: 'image.jpg',
-      //    title : "name",
-      //    description: "project"
-      //}
-  var images = [];
+  // send back commits by their timestamp
   client.zrevrange("timestamps:commits", 0, -1, function(err, replies) {
     console.log("replies", replies);
     console.log("err", err);
@@ -36,12 +28,6 @@ app.get('/images', function(req, res){
       res.send(replies);
     }
   });
-  return;
-  client.smembers("all:commits", function(err, replies) {
-    console.log("replies", replies);
-    res.send(replies);
-  });
-
 });
 
 app.post('/commit', function(req, res, next){
@@ -50,8 +36,6 @@ app.post('/commit', function(req, res, next){
 
   try {
     var date = new Date();
-
-    var multi = client.multi();
 
     console.log("name", JSON.stringify(req.body.name));
     console.log("email", JSON.stringify(req.body.email));
@@ -73,34 +57,36 @@ app.post('/commit', function(req, res, next){
       util.pump(is, os, function(err) {
         if (err) {
           throw (err);
-
-          multi.hmset("person:" + req.body.email,
-                      "email", req.body.email,
-                      "name", req.body.name);
-
-          multi.sadd("all:commits", req.body.commit);
-          multi.sadd("commits:person:" + req.body.email, req.body.commit);
-
-          multi.sadd("all:projects", req.body.project);
-          multi.sadd("projects:person:" + req.body.email, req.body.project);
-          multi.sadd("projects:commit:" + req.body.commit, req.body.project);
-
-          // commit breakdown on timestamp
-          multi.zadd("timestamps:commits", date.getTime(), req.body.commit);
-
-          // commits breakdown by dates
-          multi.sadd("date:commits:" + date.getFullYear(), req.body.commit);
-          multi.sadd("date:commits:" + date.getFullYear() + ":" + date.getMonth(), req.body.commit);
-          multi.sadd("date:commits:" + date.getFullYear() + ":" + date.getMonth() + ":" + date.getDate(), req.body.commit);
-
-          multi.exec(function reply(err, replies) {
-            if (err) {
-              console.error(err);
-            }
-          });
-
         }
       });
+    });
+
+    // assume there are no errors in saving the image
+    var multi = client.multi();
+
+    multi.hmset("person:" + req.body.email,
+                "email", req.body.email,
+                "name", req.body.name);
+
+    multi.sadd("all:commits", req.body.commit);
+    multi.sadd("commits:person:" + req.body.email, req.body.commit);
+
+    multi.sadd("all:projects", req.body.project);
+    multi.sadd("projects:person:" + req.body.email, req.body.project);
+    multi.sadd("projects:commit:" + req.body.commit, req.body.project);
+
+    // commit breakdown on timestamp
+    multi.zadd("timestamps:commits", date.getTime(), req.body.commit);
+
+    // commits breakdown by dates
+    multi.sadd("date:commits:" + date.getFullYear(), req.body.commit);
+    multi.sadd("date:commits:" + date.getFullYear() + ":" + date.getMonth(), req.body.commit);
+    multi.sadd("date:commits:" + date.getFullYear() + ":" + date.getMonth() + ":" + date.getDate(), req.body.commit);
+
+    multi.exec(function reply(err, replies) {
+      if (err) {
+        throw (err);
+      }
     });
 
     res.send("success");
