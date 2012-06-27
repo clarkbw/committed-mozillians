@@ -30,6 +30,20 @@ app.get('/images', function(req, res){
   });
 });
 
+app.get('/person/:commit', function(req, res){
+  res.contentType('json');
+  var commit = req.param("commit");
+  if (commit) {
+    client.get("person:commit:" + commit, function(err, email) {
+      console.log("email", email);
+      client.hgetall("person:" + email, function(err, person) {
+        console.log("person", person);
+        res.send(person);
+      });
+    })
+  }
+});
+
 app.post('/commit', function(req, res, next){
 
   //console.dir(req.body);
@@ -70,6 +84,9 @@ app.post('/commit', function(req, res, next){
 
     multi.sadd("all:commits", req.body.commit);
     multi.sadd("commits:person:" + req.body.email, req.body.commit);
+
+    // reverse lookup of a person from a commit
+    multi.set("person:commit:" + req.body.commit, req.body.email);
 
     multi.sadd("all:projects", req.body.project);
     multi.sadd("projects:person:" + req.body.email, req.body.project);
