@@ -35,7 +35,7 @@ begin
     require 'rubygems'
   end
   require 'rest_client'
-  RestClient.post('http://localhost:8080/commit',
+  RestClient.post('https://committed-mozillians.vcap.mozillalabs.com/commit',
                   :photo => File.new(file),
                   :name => name,
                   :email => email,
